@@ -3,7 +3,8 @@ import java.util.regex.Pattern;
 
        /* Реализовать программу, проверяющую качество логина и пароля по следующим критериям:
         логин должен содержать только латинские буквы, цифры, и знак подчеркивания,
-        длина логина не может превышать 20 символов, пароль может содержать те же символы, что и логин,
+        длина логина не может превышать 20 символов,
+         пароль может содержать те же символы, что и логин,
         а также любые знаки препинания, минимальная длина пароля – 12 символов, максимальная длина пароля – 20 символов.
         В случае, если был введен неверный пароль, необходимо выбросить исключение BadPasswordFormatException,
         если неверный логин – BadLoginFormatException. Сообщение об исключении должно быть информативным.
@@ -11,63 +12,105 @@ import java.util.regex.Pattern;
         В main()-методе необходимо обработать данные исключения. */
 
 public class MainForm {
+    // регулярное для логина с буквами цифрами и подчеркиванием длинной от 1-20
+    private static final Pattern LOGIN_PATTERN = Pattern.compile("^[a-zA-Z0-9_]{1,20}$");
+    // для уточнения ошибки регулярка на длину логина
+    private static final Pattern LOGIN_PATTERN_OUT_OF_RANGE = Pattern.compile("^.{1,20}$");
+    // для уточнения ошибки регулярка на символы логина
+    private static final Pattern LOGIN_PATTERN_SYMBOLS = Pattern.compile("^[a-zA-Z0-9_]*$");
+    // регулярное для пароля с буквами цифрами, подчеркиванием и ЗП длинной от 12-20
+    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\p{Punct}]{12,20}$");
+    // для уточнения ошибки регулярка на длину пароля
+    private static final Pattern PASSWORD_PATTERN_OUT_OF_RANGE = Pattern.compile("^.{12,20}$");
+    // для уточнения ошибки регулярка на символы пароля
+    private static final Pattern PASSWORD_PATTERN_SYMBOLS = Pattern.compile("^[a-zA-Z0-9_\\p{Punct}]*$");
 
-    private static final Pattern NAME_PATTERN = Pattern.compile("^\\w{1,20}$");
-    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^.{12,20}$"); //Всё-таки знаки препинания - это знаки препинания, а не "все символы".
-                                                                                    //~˜µ≤≥÷Ωç√ - всё это не знаки препинания, но в твоём пароле использоваться могут.
+    //Всё-таки знаки препинания - это знаки препинания, а не "все символы"
+    // Класс знаков пунктуации (препинания в java) - Punct содержит !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+//    private static final Pattern PASSWORD_PATTERN = Pattern.compile("^[a-zA-Z0-9_,.]{12,20}$"); //вот ., если нужны
+//    еще какие то знаки препинания а Punct не подходит то заменить строчку закоментированной  и добавить по надобности еще знаков
 
-    public static void main(String[] args) throws BadLogin, BadPassword {
-        System.out.println(checkLoginPassword(new FormUser("супер", "z3c6b7m9@#$%qsedrg3")));  //Вот этот пароль по идее принят быть не должен.
-        System.out.println(checkLoginPassword(new FormUser("puper", "z3c6b7m9@#$%qsedrg3")));  //И этот тоже. По заданию не должен. Но у тебя он примется.
-        System.out.println(checkLoginPassword(new FormUser("asd", "asxf45tgd##59")));
-        System.out.println(checkLoginPassword(new FormUser("qwerty123", "456789!")));
-        System.out.println(checkLoginPassword(new FormUser("qwerty", "123456789")));
-        System.out.println(checkLoginPassword(new FormUser("as23456sdf_d_6", "1qaghnbdty8945dft")));
+
+    public static void main(String[] args)  {
+
+        System.out.println(validLoginPassword(new FormUser("супер", "z3c6b7m9@#$%qsedrg3asssssssssssssssssssssssssssssssss")));
+        System.out.println(validLoginPassword(new FormUser("puper222222222222222222222222222222222_2222222222222222222222222222222222222", "z3c6b7m9@#$%qsedrg3")));
+        System.out.println(validLoginPassword(new FormUser("asd", "asxf45tgd##59")));
+        System.out.println(validLoginPassword(new FormUser("qwerty123", "456789!")));
+        System.out.println(validLoginPassword(new FormUser("qwerty", "123456µ≤≥÷789")));
+        System.out.println(validLoginPassword(new FormUser("as23456sdf_d_6", "1qaghnbdty8945dft.,")));
     }
 
-    private static void validUsername (FormUser user) throws BadLogin {
+    private static void validUsername (FormUser user) throws BadLoginFormatException {
 
-        final Matcher validateName = NAME_PATTERN.matcher(user.username);
-        if (!validateName.matches()) {
-            throw new BadLogin("Ваш логин должен содержать только латинские буквы," +
-                    "цифры и знак подчеркивания, длина логина не может превышать 20 символов.");
+        final Matcher validateLogin = LOGIN_PATTERN.matcher(user.login);
+        //если не прошло общую проверку
+        if (!validateLogin.matches()) {
+            // то проводим еще 2 проверки чтобы уточнить причину
+            final Matcher validateLoginRange = LOGIN_PATTERN_OUT_OF_RANGE.matcher(user.login);
+            final Matcher validateLoginSymbols = LOGIN_PATTERN_SYMBOLS.matcher(user.login);
+            String errMessage = "";
+            // если не прошла проверка на символы
+            if (!validateLoginSymbols.matches()) {
+                errMessage += "Ваш логин должен содержать только латинские буквы, цифры и знак подчеркивания";
+            }
+            // если не прошла проверка на длину
+            if (!validateLoginRange.matches()) {
+                // если проверка ан символы прошла, то пишем с большой буквы сообщение
+                if (errMessage.equals("")){
+                    errMessage += "Длина логина не может превышать 20 символов";
+                }
+                // если проверка ан символы НЕ прошла, то пишем запятую и дополняем строку ошибки
+                else{
+                    errMessage += ", длина логина не может превышать 20 символов";
+                }
+            }
+
+            throw new BadLoginFormatException(errMessage);
         }
     }
 
-    private static void validPassword (FormUser user) throws BadPassword {
-
+    private static void validPassword (FormUser user) throws BadPasswordFormatException {
+        // Аналогично логину
         final Matcher validatePassword = PASSWORD_PATTERN.matcher(user.password);
         if (!validatePassword.matches()) {
-            throw new BadPassword("Ваш пароль может содержать только латинские буквы, цифры," +
-                    "знак подчеркивания, а также любые знаки препинания," +
-                    "минимальная длина пароля – 12 символов, максимальная длина пароля – 20 символов.");
+            final Matcher validatePasswordRange = PASSWORD_PATTERN_OUT_OF_RANGE.matcher(user.password);
+            final Matcher validatePasswordSymbols = PASSWORD_PATTERN_SYMBOLS.matcher(user.password);
+            String errMessage = "";
+
+            if (!validatePasswordSymbols.matches()) {
+                errMessage += "Ваш пароль должен содержать только латинские буквы, цифры и знак подчеркивания, а также любые знаки препинания";
+            }
+            if (!validatePasswordRange.matches()) {
+                if (errMessage.equals("")){
+                    errMessage += "Длина пароля не может быть меньше 12 символов и больше 20 символов";
+                }else{
+                    errMessage += ", длина пароля не может быть меньше 12 символов и больше 20 символов\"";
+                }
+            }
+            throw new BadPasswordFormatException(errMessage);
         }
+
     }
 
-    private static String checkLoginPassword (FormUser user) {
-
-        String error = "Неверный формат логина/пароля!";  //error у тебя где-то используется? Зачем оно тебе?
-        String success = "Логин и пароль подходят!";
+    private static String validLoginPassword(FormUser user) {
 
         try {
-            MainForm.validUsername(new FormUser(user.username, user.password));   //И зачем ты тут создаёшь нового пользователя? Старый чем не угодил?
-            MainForm.validPassword(new FormUser(user.username, user.password));
-            return success;
-        } catch (BadLogin badLoginExc) {  //Так как действие на поимку исключения у тебя одно и то же, то есть ли смысл разделять их? Кажется, что нет.
-            return badLoginExc.getMessage();
-        }
-        catch (BadPassword badPassExc) {
-            return badPassExc.getMessage();
+            MainForm.validUsername(user);
+            MainForm.validPassword(user);
+            return "Логин и пароль подходят!";
+        } catch (Exception exception) {
+            return exception.getMessage();
         }
     }
 
     static class FormUser {
-        private String username;
+        private String login;
 
         private String password;
 
-        public FormUser(String username, String password) {
-            this.username = username;
+        public FormUser(String login, String password) {
+            this.login = login;
             this.password = password;
         }
     }
