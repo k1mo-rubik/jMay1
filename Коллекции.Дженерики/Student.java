@@ -49,8 +49,8 @@ public class Student {
         return (double)sum/scores.size();
     }
 
-    @Override
-    public String toString() {
+
+    public String print() {
         return "ФИО: " + fio +
                 ", Возраст: " + age +
                 ", Средний балл: " + getAvgScore();
