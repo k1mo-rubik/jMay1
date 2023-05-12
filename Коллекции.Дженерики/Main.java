@@ -1,6 +1,9 @@
 package Homework;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 public class Main {
     static ArrayList<Student> STUDENTS = new ArrayList<>();
@@ -9,6 +12,8 @@ public class Main {
         STUDENTS.addAll(Arrays.asList(
         new Student("Иванов Иван Иванович", new ArrayList<>(Arrays.asList(5, 5, 4, 4, 4)), 20),
         new Student("Александров Александр Александрович", new ArrayList<>(Arrays.asList(3, 4, 3, 3, 4)), 22),
+        new Student("Артёмов Александр Александрович", new ArrayList<>(Arrays.asList(3, 4, 3, 3, 4)), 21),
+        new Student("Анисимов Александр Александрович", new ArrayList<>(Arrays.asList(3, 4, 3, 3, 4)), 20),
         new Student("Аброров Артур Дмитриевич", new ArrayList<>(Arrays.asList(3, 4, 3, 3, 4)), 20)
         ));
         // Вывод исходного списка
@@ -16,6 +21,8 @@ public class Main {
         for (Student student : STUDENTS) {
             System.out.println(student.print());
         }
+
+        surnameStartWith();
 
         // Имея список студентов (Student), найти и вывести имена всех студентов,
         // чей средний бал по всем предметам (Subject) выше заданного
@@ -82,17 +89,23 @@ public class Main {
     private static void surnameStartWith() {
 
         System.out.println("Задайте букву: ");
-        String s = new Scanner(System.in).next();
+        char firstFIOLetter =  new Scanner(System.in).next().toUpperCase().charAt(0);
 
 
         System.out.println("Список студентов (по возрастанию по имени):");
-        List<Student> filteredStudents = STUDENTS.stream()
-                .filter(student -> student.getFio().charAt(0) == s.charAt(0))
-            .sorted(Comparator.comparing(Student::getFio, Comparator.nullsFirst(String::compareTo))
-                .thenComparing(Student::getAge, Comparator.nullsFirst(String::compareTo)).reversed()).collect(Collectors.toList());
-//                .sorted(Comparator.comparing(Student::getFio))
-//                .sorted(Comparator.comparing(Student::getAge).reversed())
-                .toList();
+        List<Student> filteredStudents = new ArrayList<>();
+
+    // заполняем коллекцию студентами с фамилией начинающейся на букву
+    for (Student student : STUDENTS) {
+            if (student.getFio().startsWith(String.valueOf(firstFIOLetter))) {
+                filteredStudents.add(student);
+            }
+        }
+        //сортируем список по возрастанию по имени, и по убыванию по возрасту студента
+        Collections.sort(filteredStudents, Comparator.comparing(Student::getName)
+                .thenComparing(Comparator.comparingInt(Student::getAge).reversed()));
+
+
         for (Student student : filteredStudents) {
             System.out.println(student.print());
         }
@@ -121,13 +134,6 @@ public class Main {
             }
         }
     }
-    class NameComparator implements Comparator<Student> {
 
-        // override the compare() method
-        public int compare(Student s1, Student s2)
-        {
-            return s1.getFio().compareTo(s2.getFio());
-        }
-    }
 
 }

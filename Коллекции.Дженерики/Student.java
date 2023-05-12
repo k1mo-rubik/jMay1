@@ -35,6 +35,10 @@ public class Student {
     public String getFio() {
         return fio;
     }
+    public String  getName() {
+        String[]FIO= fio.split(" ");
+        return FIO[1];
+    }
 
     public void setFio(String fio) {
         this.fio = fio;
