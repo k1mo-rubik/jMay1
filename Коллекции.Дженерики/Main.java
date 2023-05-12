@@ -88,8 +88,10 @@ public class Main {
         System.out.println("Список студентов (по возрастанию по имени):");
         List<Student> filteredStudents = STUDENTS.stream()
                 .filter(student -> student.getFio().charAt(0) == s.charAt(0))
-                .sorted(Comparator.comparing(Student::getFio))
-                .sorted(Comparator.comparing(Student::getAge).reversed())
+            .sorted(Comparator.comparing(Student::getFio, Comparator.nullsFirst(String::compareTo))
+                .thenComparing(Student::getAge, Comparator.nullsFirst(String::compareTo)).reversed()).collect(Collectors.toList());
+//                .sorted(Comparator.comparing(Student::getFio))
+//                .sorted(Comparator.comparing(Student::getAge).reversed())
                 .toList();
         for (Student student : filteredStudents) {
             System.out.println(student.print());
