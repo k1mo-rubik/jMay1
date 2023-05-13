@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * <pre>
@@ -45,7 +45,9 @@ public class ParallelTestFramework {
             }
 
             // Выполнили тестовые методы и записали результаты
-            List<String> results = new ArrayList<>(testMethods.size());
+            List<String> results = Collections.synchronizedList(new ArrayList<>());
+// ИЛИ ТАК            List<String> results1 = new CopyOnWriteArrayList<>();
+
             for (Method testMethod : testMethods) {
                 task.add(() -> {
                     String threadName = Thread.currentThread().getName();
@@ -71,8 +73,11 @@ public class ParallelTestFramework {
                 t[i].start();
                 i++;
             }
+
+            i =0;
             while (i<task.size()) {
                 t[i].join();
+                i++;
             }
 
 
